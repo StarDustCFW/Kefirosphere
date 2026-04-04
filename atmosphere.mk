@@ -27,10 +27,10 @@ dist-no-debug: package3 $(CURRENT_DIRECTORY)/$(ATMOSPHERE_OUT_DIR)
 	mkdir -p $(DIST_DIR)/bootloader/payloads
 	mkdir -p $(DIST_DIR)/switch/daybreak
 	cp fusee/$(ATMOSPHERE_BOOT_OUT_DIR)/package3 $(DIST_DIR)/atmosphere/package3
-	cp config_templates/stratosphere.ini $(DIST_DIR)/atmosphere/config_templates/stratosphere.ini
-	cp config_templates/override_config.ini $(DIST_DIR)/atmosphere/config_templates/override_config.ini
-	cp config_templates/system_settings.ini $(DIST_DIR)/atmosphere/config_templates/system_settings.ini
-	cp config_templates/exosphere.ini $(DIST_DIR)/atmosphere/config_templates/exosphere.ini
+	# cp config_templates/stratosphere.ini $(DIST_DIR)/atmosphere/config_templates/stratosphere.ini
+	# cp config_templates/override_config.ini $(DIST_DIR)/atmosphere/config_templates/override_config.ini
+	# cp config_templates/system_settings.ini $(DIST_DIR)/atmosphere/config_templates/system_settings.ini
+	# cp config_templates/exosphere.ini $(DIST_DIR)/atmosphere/config_templates/exosphere.ini
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/0100000000000008
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/010000000000000d
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/0100000000000017
@@ -47,6 +47,7 @@ dist-no-debug: package3 $(CURRENT_DIRECTORY)/$(ATMOSPHERE_OUT_DIR)
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/010000000000b240
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/010000000000d609
 	mkdir -p $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/010000000000d623
+	mkdir -p $(DIST_DIR)/StarDust/payloads
 	cp stratosphere/boot2/$(ATMOSPHERE_OUT_DIR)/boot2.nsp $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/0100000000000008/exefs.nsp
 	cp stratosphere/dmnt/$(ATMOSPHERE_OUT_DIR)/dmnt.nsp $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/010000000000000d/exefs.nsp
 	cp stratosphere/cs/$(ATMOSPHERE_OUT_DIR)/cs.nsp $(DIST_DIR)/stratosphere_romfs/atmosphere/contents/0100000000000017/exefs.nsp
@@ -65,11 +66,11 @@ dist-no-debug: package3 $(CURRENT_DIRECTORY)/$(ATMOSPHERE_OUT_DIR)
 	@PATH="$(DEVKITPRO)/tools/bin:$$PATH" build_romfs $(DIST_DIR)/stratosphere_romfs $(DIST_DIR)/atmosphere/stratosphere.romfs
 	rm -r $(DIST_DIR)/stratosphere_romfs
 	# cp troposphere/daybreak/daybreak.nro $(DIST_DIR)/switch/daybreak/daybreak.nro
-	cp fusee/$(ATMOSPHERE_BOOT_OUT_DIR)/fusee.bin $(DIST_DIR)/bootloader/payloads/fusee.bin
-	python utilities/insert_splash_screen.py ~/dev/_kefir/bootlogo/splash_logo.png $(DIST_DIR)/atmosphere/package3
-	cd $(DIST_DIR); ls; rm -rf ../../../../../atmosphere-$(ATMOSPHERE_VERSION).zip; ls
-	cd $(DIST_DIR); zip -r ../../../../../atmosphere-$(ATMOSPHERE_VERSION).zip ./*; cd ../;
-	rm -rf $(DIST_DIR)
+	cp fusee/$(ATMOSPHERE_BOOT_OUT_DIR)/fusee.bin $(DIST_DIR)/StarDust/payloads/fusee.bin
+	#python utilities/insert_splash_screen.py ~/dev/_kefir/bootlogo/splash_logo.png $(DIST_DIR)/atmosphere/package3
+	cd $(DIST_DIR); ls; rm -rf atmosphere-$(ATMOSPHERE_VERSION).zip; ls
+	cd $(DIST_DIR); zip -r atmosphere-$(ATMOSPHERE_VERSION).zip ./*; cd ../;
+	#rm -rf $(DIST_DIR)
 
 package3: emummc fusee stratosphere mesosphere exosphere troposphere
 	$(SILENTCMD)$(PYTHON) fusee/build_package3.py $(CURRENT_DIRECTORY) $(ATMOSPHERE_OUT_DIR) $(ATMOSPHERE_BOOT_OUT_DIR) $(ATMOSPHERE_GIT_HASH) $(ATMOSPHERE_MAJOR_VERSION) $(ATMOSPHERE_MINOR_VERSION) $(ATMOSPHERE_MICRO_VERSION) 0 $(ATMOSPHERE_SUPPORTED_HOS_MAJOR_VERSION) $(ATMOSPHERE_SUPPORTED_HOS_MINOR_VERSION) $(ATMOSPHERE_SUPPORTED_HOS_MICRO_VERSION) 0
