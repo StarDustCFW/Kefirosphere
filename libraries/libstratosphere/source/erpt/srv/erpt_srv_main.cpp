@@ -55,7 +55,7 @@ namespace ams::erpt::srv {
         }
 
         Result MountSystemSaveData() {
-            if (hos::GetVersion() < hos::Version_22_0_0) {
+            if (hos::GetVersion() < hos::Version_21_0_0) {
                 fs::DisableAutoSaveDataCreation();
             }
 

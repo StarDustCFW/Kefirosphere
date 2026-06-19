@@ -982,7 +982,7 @@ namespace ams::kern {
         main_thread->GetContext().SetArguments(0, thread_handle);
 
         /* Pass the thread handle to the thread local region. */
-        static_cast<ams::svc::ThreadLocalRegion *>(main_thread->GetThreadLocalRegionHeapAddress())->thread_handle = thread_handle;
+        static_cast<ams::svc::ThreadLocalRegion *>(main_thread->GetThreadLocalRegionHeapAddress())->current_thread_handle = thread_handle;
 
         /* Update our state. */
         this->ChangeState((state == State_Created) ? State_Running : State_RunningAttached);

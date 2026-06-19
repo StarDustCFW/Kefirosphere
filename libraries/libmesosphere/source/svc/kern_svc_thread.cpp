@@ -67,7 +67,7 @@ namespace ams::kern::svc {
             R_TRY(process.GetHandleTable().Add(out, thread));
 
             /* Pass the thread handle to the thread local region. */
-            static_cast<ams::svc::ThreadLocalRegion *>(thread->GetThreadLocalRegionHeapAddress())->thread_handle = *out;
+            static_cast<ams::svc::ThreadLocalRegion *>(thread->GetThreadLocalRegionHeapAddress())->current_thread_handle = *out;
 
             R_SUCCEED();
         }
