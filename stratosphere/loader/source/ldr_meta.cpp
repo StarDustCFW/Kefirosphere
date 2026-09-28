@@ -88,8 +88,8 @@ namespace ams::ldr {
             R_UNLESS(npdm->magic == Npdm::Magic, ldr::ResultInvalidMeta());
 
             /* Validate flags. */
-            constexpr u32 InvalidMetaFlagMask = 0x80000000;
-            R_UNLESS(!(npdm->flags & InvalidMetaFlagMask), ldr::ResultInvalidMeta());
+            constexpr u32 InvalidMetaFlag0Mask = 0x80000000;
+            R_UNLESS(!(npdm->flags0 & InvalidMetaFlag0Mask), ldr::ResultInvalidMeta());
 
             /* Validate Acid extents. */
             R_TRY(ValidateSubregion(sizeof(Npdm), size, npdm->acid_offset, npdm->acid_size, sizeof(Acid)));
@@ -262,14 +262,15 @@ namespace ams::ldr {
                 /* Perform address space override. */
                 if (status.HasOverrideAddressSpace()) {
                     /* Clear the existing address space. */
-                    meta->npdm->flags &= ~Npdm::MetaFlag_AddressSpaceTypeMask;
+                    meta->npdm->flags0 &= ~Npdm::MetaFlag0_ProcessAddressSpaceMask;
 
                     /* Set the new address space flag. */
                     switch (status.GetOverrideAddressSpaceFlags()) {
-                        case cfg::impl::OverrideStatusFlag_AddressSpace32Bit:             meta->npdm->flags |= (Npdm::AddressSpaceType_32Bit)             << Npdm::MetaFlag_AddressSpaceTypeShift; break;
-                        case cfg::impl::OverrideStatusFlag_AddressSpace64BitDeprecated:   meta->npdm->flags |= (Npdm::AddressSpaceType_64BitDeprecated)   << Npdm::MetaFlag_AddressSpaceTypeShift; break;
-                        case cfg::impl::OverrideStatusFlag_AddressSpace32BitWithoutAlias: meta->npdm->flags |= (Npdm::AddressSpaceType_32BitWithoutAlias) << Npdm::MetaFlag_AddressSpaceTypeShift; break;
-                        case cfg::impl::OverrideStatusFlag_AddressSpace64Bit:             meta->npdm->flags |= (Npdm::AddressSpaceType_64Bit)             << Npdm::MetaFlag_AddressSpaceTypeShift; break;
+                        case cfg::impl::OverrideStatusFlag_AddressSpace32Bit:           meta->npdm->flags0 |= (Npdm::ProcessAddressSpace_32Bit)           << Npdm::MetaFlag0_ProcessAddressSpaceShift; break;
+                        case cfg::impl::OverrideStatusFlag_AddressSpace64Bit36:         meta->npdm->flags0 |= (Npdm::ProcessAddressSpace_64Bit36)         << Npdm::MetaFlag0_ProcessAddressSpaceShift; break;
+                        case cfg::impl::OverrideStatusFlag_AddressSpace32BitNoReserved: meta->npdm->flags0 |= (Npdm::ProcessAddressSpace_32BitNoReserved) << Npdm::MetaFlag0_ProcessAddressSpaceShift; break;
+                        case cfg::impl::OverrideStatusFlag_AddressSpace64Bit39:         meta->npdm->flags0 |= (Npdm::ProcessAddressSpace_64Bit39)         << Npdm::MetaFlag0_ProcessAddressSpaceShift; break;
+                        case cfg::impl::OverrideStatusFlag_AddressSpace64Bit42:         meta->npdm->flags0 |= (Npdm::ProcessAddressSpace_64Bit42)         << Npdm::MetaFlag0_ProcessAddressSpaceShift; break;
                         AMS_UNREACHABLE_DEFAULT_CASE();
                     }
                 }
@@ -283,7 +284,9 @@ namespace ams::ldr {
                     }
                 }
 
-
+                /* Fix the debug capabilities, to prevent needing a hbl recompilation. */
+                FixDebugCapabilityForHbl(static_cast<util::BitPack32 *>(meta->acid_kac), meta->acid->kac_size / sizeof(util::BitPack32));
+                FixDebugCapabilityForHbl(static_cast<util::BitPack32 *>(meta->aci_kac),  meta->aci->kac_size  / sizeof(util::BitPack32));
             } else if (hos::GetVersion() >= hos::Version_10_0_0) {
                 /* If storage id is none, there is no base code filesystem, and thus it is impossible for us to validate. */
                 /* However, if we're an application, we are guaranteed a base code filesystem. */

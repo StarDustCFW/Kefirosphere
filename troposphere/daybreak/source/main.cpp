@@ -50,10 +50,6 @@ extern "C" {
             fatalThrow(rc);
         }
 
-        // Initialize setsys service to get firmware version
-        if (R_FAILED(rc = setsysInitialize())) {
-            fatalThrow(rc);
-        }
     }
 
     void userAppExit(void) {
@@ -63,7 +59,6 @@ extern "C" {
         plExit();
         spsmExit();
         romfsExit();
-        setsysExit();
         amssuExit();
     }
 

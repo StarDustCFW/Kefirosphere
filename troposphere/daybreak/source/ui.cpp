@@ -22,7 +22,6 @@
 #include "ui.hpp"
 #include "ui_util.hpp"
 #include "assert.hpp"
-#include <switch/services/set.h>
 
 namespace dbk {
 
@@ -67,8 +66,8 @@ namespace dbk {
         /* Update install state. */
         char g_update_path[FS_MAX_PATH];
         bool g_reset_to_factory = false;
-        bool g_exfat_supported = true;
-        bool g_use_exfat = true;
+        bool g_exfat_supported = false;
+        bool g_use_exfat = true
 
         constexpr u32 MaxTapMovement = 20;
 
@@ -414,7 +413,7 @@ namespace dbk {
         const float button_y = y + TitleGap + SubTextHeight + VerticalGap * 2.0f + (R_FAILED(m_rc) ? SubTextHeight : 0.0f);
         const float button_width = (WindowWidth - HorizontalInset * 2.0f) / 2.0f - ButtonHorizontalGap;
         this->AddButton(BackButtonId, "Back", x + HorizontalInset, button_y, button_width, ButtonHeight);
-        this->AddButton(ContinueButtonId, "Install", x + HorizontalInset + button_width + ButtonHorizontalGap, button_y, button_width, ButtonHeight);
+        this->AddButton(ContinueButtonId, "Continue", x + HorizontalInset + button_width + ButtonHorizontalGap, button_y, button_width, ButtonHeight);
         this->SetButtonSelected(ContinueButtonId, true);
     }
 
@@ -767,7 +766,7 @@ namespace dbk {
 
         /* Add buttons. */
         this->AddButton(BackButtonId, "Back", x + HorizontalInset, y + WindowHeight - BottomInset - ButtonHeight, button_width, ButtonHeight);
-        this->AddButton(ContinueButtonId, "Install", x + HorizontalInset + button_width + ButtonHorizontalGap, y + WindowHeight - BottomInset - ButtonHeight, button_width, ButtonHeight);
+        this->AddButton(ContinueButtonId, "Continue", x + HorizontalInset + button_width + ButtonHorizontalGap, y + WindowHeight - BottomInset - ButtonHeight, button_width, ButtonHeight);
         this->SetButtonEnabled(BackButtonId, false);
         this->SetButtonEnabled(ContinueButtonId, false);
 
@@ -796,26 +795,12 @@ namespace dbk {
         }
 
         /* Print update information. */
-        this->LogText("- Target Version: %u.%u.%u\n", (m_update_info.version >> 26) & 0x1f, (m_update_info.version >> 20) & 0x1f, (m_update_info.version >> 16) & 0xf);
+        this->LogText("- Version: %d.%d.%d\n", (m_update_info.version >> 26) & 0x1f, (m_update_info.version >> 20) & 0x1f, (m_update_info.version >> 16) & 0xf);
         if (m_update_info.exfat_supported) {
-            this->LogText("- Target exFAT: Supported\n");
+            this->LogText("- exFAT: Supported\n");
         } else {
-            this->LogText("- Target exFAT: Unsupported\n");
+            this->LogText("- exFAT: Unsupported\n");
         }
-
-        // Отримати та вивести поточну версію системної прошивки
-        SetSysFirmwareVersion current_fw_version; // Оголошення змінної
-        // memset(¤t_fw_version, 0, sizeof(current_fw_version)); 
-        Result rc_fw = setsysGetFirmwareVersion(&current_fw_version); // Передача адреси оголошеної змінної
-        if (R_SUCCEEDED(rc_fw)) {
-            this->LogText("- Current System Version: %u.%u.%u\n",
-                          current_fw_version.major, 
-                          current_fw_version.minor, 
-                          current_fw_version.micro); 
-        } else {
-            this->LogText("- Current System Version: (Failed to get: 0x%08x)\n", rc_fw);
-        }
-
         this->LogText("- Firmware variations: %d\n", m_update_info.num_firmware_variations);
 
         /* Mark as having obtained update info. */
@@ -904,14 +889,11 @@ namespace dbk {
                     /* Check if exfat is supported. */
                     g_exfat_supported = m_update_info.exfat_supported && R_SUCCEEDED(m_validation_info.exfat_result);
                     if (!g_exfat_supported) {
-                        g_use_exfat = true;
+                        g_use_exfat = false;
                     }
 
-                    /* Set the reset to factory settings flag to false by default. */
-                    g_reset_to_factory = false;
-
-                    /* Create the install update menu. */
-                    std::shared_ptr<Menu> next_menu = std::make_shared<InstallUpdateMenu>(g_current_menu);
+                    /* Create the next menu. */
+                    std::shared_ptr<Menu> next_menu = std::make_shared<ChooseResetMenu>(g_current_menu);
 
                     /* Warn the user if they're updating with exFAT supposed to be supported but not present/corrupted. */
                     if (m_update_info.exfat_supported && R_FAILED(m_validation_info.exfat_result)) {
@@ -978,7 +960,11 @@ namespace dbk {
 
             std::shared_ptr<Menu> next_menu;
 
-            next_menu = std::make_shared<WarningMenu>(g_current_menu, std::make_shared<InstallUpdateMenu>(g_current_menu), "Ready to begin update installation", "Are you sure you want to proceed?");
+            if (g_exfat_supported) {
+                next_menu = std::make_shared<ChooseExfatMenu>(g_current_menu);
+            } else {
+                next_menu = std::make_shared<WarningMenu>(g_current_menu, std::make_shared<InstallUpdateMenu>(g_current_menu), "Ready to begin update installation", "Are you sure you want to proceed?");
+            }
 
             if (g_reset_to_factory) {
                 ChangeMenu(std::make_shared<WarningMenu>(g_current_menu, next_menu, "Warning: Factory reset selected", "Saves and installed games will be permanently deleted."));
